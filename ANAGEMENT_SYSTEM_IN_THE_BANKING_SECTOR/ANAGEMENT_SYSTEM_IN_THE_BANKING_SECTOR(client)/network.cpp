@@ -5,13 +5,13 @@
 SOCKET connectToServer(const std::string& ip, int port) {
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-        std::cerr << "WSAStartup failed.\n";
+        std::cerr << "WSAStartup ошибка.\n";
         return INVALID_SOCKET;
     }
 
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
-        std::cerr << "Failed to create socket.\n";
+        std::cerr << "Ошибка создания сокета.\n";
         WSACleanup();
         return INVALID_SOCKET;
     }
@@ -22,7 +22,7 @@ SOCKET connectToServer(const std::string& ip, int port) {
     InetPtonA(AF_INET, ip.c_str(), &server.sin_addr);
 
     if (connect(sock, (sockaddr*)&server, sizeof(server)) == SOCKET_ERROR) {
-        std::cerr << "Failed to connect to server.\n";
+        std::cerr << "Ошибка подключения к серверу.\n";
         closesocket(sock);
         WSACleanup();
         return INVALID_SOCKET;

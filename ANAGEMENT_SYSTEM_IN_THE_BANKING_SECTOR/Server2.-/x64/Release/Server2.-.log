@@ -1,0 +1,8 @@
+﻿  server.cpp
+E:\projects\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\Server2.-\server.cpp(118,67): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
+  Создание кода
+  7 of 483 functions ( 1.4%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    6 functions had inline decision re-evaluated but remain unchanged
+  Создание кода завершено
+  Server2.-.vcxproj -> E:\projects\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\x64\Release\Server2.0.exe
