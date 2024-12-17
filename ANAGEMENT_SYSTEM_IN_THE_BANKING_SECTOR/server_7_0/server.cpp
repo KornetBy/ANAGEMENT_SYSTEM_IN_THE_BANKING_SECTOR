@@ -13,10 +13,12 @@
 #define DEFAULT_PORT "27015"
 #define BUFFER_SIZE 4096
 
-void handleClient(SOCKET clientSocket, RequestHandler& handler, std::string clientAddress) {
-    ClientHandler clientHandler(clientSocket, handler);
+void handleClient(SOCKET clientSocket, RequestHandler* handler, std::string clientAddress) {
+    ClientHandler clientHandler(clientSocket, *handler);
     clientHandler.handle();
 }
+
+
 
 int main() {
     SetConsoleCP(1251);
@@ -79,43 +81,57 @@ int main() {
     std::cout << "Сервер запущен. Ожидание подключений...\n";
 
     // Инициализация RequestHandler с необходимыми параметрами
-    RequestHandler handler("logs/server_logs.txt",
-        "data/users.txt",
-        "data/employees.txt",
-        "data/positions.txt",
-        "data/courses.txt",
-        "data/compensation_requests.txt",
-        "data/salaries.txt",
-        "data/schedules.txt",
-        "data/job_responsibilities.txt",
-        "data/departments.txt",
-        "data/performance_evaluations.txt",
-        "data/history.txt");
+    try {
+        RequestHandler handler(
+            "C:\\proj\\server\\server_logs.txt",
+            "C:\\proj\\server\\users.txt",
+            "C:\\proj\\server\\employees.txt",
+            "C:\\proj\\server\\positions.txt",
+            "C:\\proj\\server\\courses.txt",
+            "C:\\proj\\server\\compensation_requests.txt",
+            "C:\\proj\\server\\salaries.txt",
+            "C:\\proj\\server\\schedules.txt",
+            "C:\\proj\\server\\job_responsibilities.txt",
+            "C:\\proj\\server\\departments.txt",
+            "C:\\proj\\server\\performance_evaluations.txt",
+            "C:\\proj\\server\\history.txt");
 
-    // Главный цикл приема клиентов
-    while (true) {
-        SOCKET ClientSocket = accept(ListenSocket, NULL, NULL);
-        if (ClientSocket == INVALID_SOCKET) {
-            std::cerr << "accept failed: " << WSAGetLastError() << "\n";
-            closesocket(ListenSocket);
-            WSACleanup();
-            return 1;
+        std::cout << "RequestHandler успешно инициализирован!\n";
+
+        // Запуск основного сервера
+        while (true) {
+            SOCKET ClientSocket = accept(ListenSocket, NULL, NULL);
+            if (ClientSocket == INVALID_SOCKET) {
+                std::cerr << "accept failed: " << WSAGetLastError() << "\n";
+                closesocket(ListenSocket);
+                WSACleanup();
+                return 1;
+            }
+
+            // Получение адреса клиента
+            sockaddr_in clientAddr;
+            int clientAddrSize = sizeof(clientAddr);
+            getpeername(ClientSocket, (sockaddr*)&clientAddr, &clientAddrSize);
+            char clientIP[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIP, INET_ADDRSTRLEN);
+            std::string clientAddress(clientIP);
+
+            std::cout << "Подключен клиент: " << clientAddress << "\n";
+
+            std::thread t(handleClient, ClientSocket, &handler, clientAddress);
+            t.detach();
         }
 
-        // Получение адреса клиента
-        sockaddr_in clientAddr;
-        int clientAddrSize = sizeof(clientAddr);
-        getpeername(ClientSocket, (sockaddr*)&clientAddr, &clientAddrSize);
-        char clientIP[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIP, INET_ADDRSTRLEN);
-        std::string clientAddress(clientIP);
-
-        std::cout << "Подключен клиент: " << clientAddress << "\n";
-
-        // Создание нового потока для клиента
-        std::thread t(handleClient, ClientSocket, std::ref(handler), clientAddress);
-        t.detach();
     }
+    catch (const std::exception& e) {
+        std::cerr << "Ошибка при инициализации RequestHandler: " << e.what() << "\n";
+        return 1;
+    }
+    catch (...) {
+        std::cerr << "Произошло неизвестное исключение при инициализации RequestHandler!\n";
+        return 1;
+    }
+
 
     // Закрытие слушающего сокета
     closesocket(ListenSocket);

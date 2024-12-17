@@ -1,32 +1,51 @@
 // EmployeeManager.cpp
 #include "EmployeeManager.h"
 #include <fstream>
-#include <sstream>
-
+#include <sstream>"
+#include <iostream>
 EmployeeManager::EmployeeManager(const std::string& filename) : employeeFileName(filename) {
     std::lock_guard<std::mutex> lock(mtx);
     std::ifstream ifs(employeeFileName);
-    if (!ifs.is_open()) return;
+    if (!ifs.is_open()) {
+        std::cerr << "Не удалось открыть файл: " << employeeFileName << "\n";
+        return;
+    }
 
     std::string line;
     while (getline(ifs, line)) {
+        if (line.empty()) continue;
+
         std::istringstream iss(line);
         std::string token;
         Employee emp;
-        getline(iss, token, '|');
-        emp.employeeID = std::stol(token);
-        getline(iss, token, '|');
-        emp.positionID = std::stol(token);
-        getline(iss, emp.fullName, '|');
-        getline(iss, emp.birthDate, '|');
-        getline(iss, emp.address, '|');
-        getline(iss, emp.contactInfo, '|');
-        getline(iss, emp.startDate, '|');
-        getline(iss, emp.status, '|');
-        employees.push_back(emp);
+
+        try {
+            getline(iss, token, '|');
+            emp.employeeID = std::stol(token);
+
+            getline(iss, token, '|');
+            emp.positionID = std::stol(token);
+
+            if (!getline(iss, emp.fullName, '|') ||
+                !getline(iss, emp.birthDate, '|') ||
+                !getline(iss, emp.address, '|') ||
+                !getline(iss, emp.contactInfo, '|') ||
+                !getline(iss, emp.startDate, '|') ||
+                !getline(iss, emp.status, '|')) {
+                throw std::runtime_error("Некорректный формат строки: " + line);
+            }
+
+            employees.push_back(emp);
+
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Ошибка при обработке строки: " << line << "\n"
+                << "Детали: " << e.what() << "\n";
+        }
     }
     ifs.close();
 }
+
 
 Employee EmployeeManager::getEmployee(long employeeID) {
     std::lock_guard<std::mutex> lock(mtx);

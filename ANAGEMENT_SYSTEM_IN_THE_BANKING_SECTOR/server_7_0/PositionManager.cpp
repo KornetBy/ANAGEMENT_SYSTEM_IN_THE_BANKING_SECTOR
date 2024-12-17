@@ -2,28 +2,44 @@
 #include "PositionManager.h"
 #include <fstream>
 #include <sstream>
-
+#include <iostream>
 PositionManager::PositionManager(const std::string& filename) : positionFileName(filename) {
-    std::lock_guard<std::mutex> lock(mtx);
-    std::ifstream ifs(positionFileName);
-    if (!ifs.is_open()) return;
+    try {
+        std::lock_guard<std::mutex> lock(mtx);
+        std::ifstream ifs(positionFileName);
+        if (!ifs.is_open()) {
+            throw std::ios_base::failure("Не удалось открыть файл: " + positionFileName);
+        }
 
-    std::string line;
-    while (getline(ifs, line)) {
-        std::istringstream iss(line);
-        std::string token;
-        Position pos;
-        getline(iss, token, '|');
-        pos.positionID = std::stol(token);
-        getline(iss, pos.positionName, '|');
-        getline(iss, token, '|');
-        pos.minSalary = std::stod(token);
-        getline(iss, token, '|');
-        pos.maxSalary = std::stod(token);
-        getline(iss, pos.qualificationRequirements, '|');
-        positions.push_back(pos);
+        std::string line;
+        while (getline(ifs, line)) {
+            std::istringstream iss(line);
+            std::string token;
+            Position pos;
+            getline(iss, token, '|');
+            pos.positionID = std::stol(token);
+            getline(iss, pos.positionName, '|');
+            getline(iss, token, '|');
+            pos.minSalary = std::stod(token);
+            getline(iss, token, '|');
+            pos.maxSalary = std::stod(token);
+            getline(iss, pos.qualificationRequirements, '|');
+            positions.push_back(pos);
+        }
+        ifs.close();
     }
-    ifs.close();
+    catch (const std::ios_base::failure& e) {
+        std::cerr << "Ошибка при открытии/чтении файла в PositionManager: " << e.what() << "\n";
+        throw; // Пробрасываем исключение наверх
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Общая ошибка в PositionManager: " << e.what() << "\n";
+        throw; // Пробрасываем исключение наверх
+    }
+    catch (...) {
+        std::cerr << "Неизвестная ошибка при инициализации PositionManager!\n";
+        throw; // Пробрасываем исключение наверх
+    }
 }
 
 Position PositionManager::getPosition(long positionID) {

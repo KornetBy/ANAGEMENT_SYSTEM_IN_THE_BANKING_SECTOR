@@ -2,9 +2,24 @@
 #include "Menu.h"
 #include <iostream>
 #include <sstream>
-
+#include <algorithm>
+#include <cctype>
+#include <locale>
 Menu::Menu(Client& cli) : client(cli), role(""), username("") {}
 
+std::string trim(const std::string& str) {
+    auto start = str.begin();
+    while (start != str.end() && std::isspace(*start)) {
+        start++;
+    }
+
+    auto end = str.end();
+    do {
+        end--;
+    } while (std::distance(start, end) > 0 && std::isspace(*end));
+
+    return std::string(start, end + 1);
+}
 bool Menu::authenticate() {
     std::cout << "Введите логин: ";
     std::cin >> username;
@@ -17,15 +32,23 @@ bool Menu::authenticate() {
     std::string response = client.receiveMessage();
 
     if (response.find("SUCCESS|") == 0) {
-        role = response.substr(8);
+        role = trim(response.substr(8)); // Обрезка пробелов
         std::cout << "Успешная авторизация. Роль: " << role << "\n";
         return true;
     }
+    else if (response.find("ERROR|") == 0) {
+        std::string errorMessage = (response.size() > 6) ? response.substr(6) : "Неизвестная ошибка";
+        std::cout << "Ошибка авторизации: " << errorMessage << "\n";
+        return false;
+    }
     else {
-        std::cout << "Ошибка авторизации: " << response.substr(6) << "\n";
+        std::cout << "Некорректный ответ сервера: " << response << "\n";
         return false;
     }
 }
+
+
+
 
 void Menu::showMenu() {
     if (!authenticate()) return;

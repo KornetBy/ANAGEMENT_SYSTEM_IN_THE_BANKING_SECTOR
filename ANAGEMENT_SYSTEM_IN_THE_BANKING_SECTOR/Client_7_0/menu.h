@@ -5,6 +5,8 @@
 #include "Client.h"
 
 class Menu {
+    Menu(); // Конструктор по умолчанию
+    Menu(const std::string& title); // Конструктор с параметром
 private:
     Client& client;
     std::string role;

@@ -2,25 +2,39 @@
 #include "UserManager.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 UserManager::UserManager(const std::string& filename) : userFileName(filename) {
     std::lock_guard<std::mutex> lock(mtx);
     std::ifstream ifs(userFileName);
-    if (!ifs.is_open()) return;
+    if (!ifs.is_open()) {
+        std::cerr << "Не удалось открыть файл: " << userFileName << "\n";
+        return;
+    }
 
     std::string line;
     while (getline(ifs, line)) {
+        if (line.empty()) continue; // Пропускаем пустые строки
+
         std::istringstream iss(line);
-        std::string token;
-        User user;
-        getline(iss, user.username, '|');
-        getline(iss, user.password, '|');
-        getline(iss, user.role, '|');
-        getline(iss, user.status, '|');
+        std::string username, password, role, status;
+
+        // Считываем токены
+        if (!getline(iss, username, '|') ||
+            !getline(iss, password, '|') ||
+            !getline(iss, role, '|') ||
+            !getline(iss, status, '|')) {
+            std::cerr << "Некорректный формат строки: " << line << "\n";
+            continue; // Пропускаем некорректную строку
+        }
+
+        // Добавляем пользователя только при корректном формате
+        User user{ username, password, role, status };
         users.push_back(user);
     }
     ifs.close();
 }
+
 
 User UserManager::getUser(const std::string& username) {
     std::lock_guard<std::mutex> lock(mtx);

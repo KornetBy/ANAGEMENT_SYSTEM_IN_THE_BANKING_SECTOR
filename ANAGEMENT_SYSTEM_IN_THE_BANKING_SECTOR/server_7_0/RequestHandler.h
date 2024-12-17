@@ -19,17 +19,24 @@ class RequestHandler {
 private:
     Logger logger;
     UserManager userManager;
-    RoleValidator roleValidator;
-    HistoryManager historyManager;
     EmployeeManager employeeManager;
     PositionManager positionManager;
     CourseManager courseManager;
     CompensationManager compensationManager;
+
+    
     SalaryManager salaryManager;
     ScheduleManager scheduleManager;
     JobResponsibilityManager jobResponsibilityManager;
     DepartmentManager departmentManager;
     PerformanceEvaluationManager performanceEvaluationManager;
+    HistoryManager historyManager;
+    RoleValidator roleValidator;
+    
+    
+    
+    
+    
 public:
     RequestHandler(const std::string& logFilename,
         const std::string& userFilename,

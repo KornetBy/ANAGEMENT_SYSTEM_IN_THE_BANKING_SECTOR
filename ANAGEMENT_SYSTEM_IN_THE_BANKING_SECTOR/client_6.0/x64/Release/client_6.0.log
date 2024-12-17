@@ -1,12 +1,4 @@
-﻿  client.cpp
-E:\projects\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\client_6.0\client.cpp(71,62): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
-  client.h
-  main.cpp
-  menu.cpp
-x64\Release\client.obj : warning LNK4042: объект указан более одного раза; лишние не учитываются
-  Создание кода
-  1 of 281 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    14 functions had inline decision re-evaluated but remain unchanged
-  Создание кода завершено
-  client_6.0.vcxproj -> E:\projects\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\x64\Release\client_6.0.exe
+﻿x64\Release\client.obj : warning LNK4042: объект указан более одного раза; лишние не учитываются
+main.obj : error LNK2001: неразрешенный внешний символ "public: __cdecl Menu::Menu(class Client &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (??0Menu@@QEAA@AEAVClient@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z).
+main.obj : error LNK2001: неразрешенный внешний символ "public: void __cdecl Client::sendMessage(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?sendMessage@Client@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z).
+E:\projects\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\x64\Release\client_6.0.exe : fatal error LNK1120: неразрешенных внешних элементов: 2
