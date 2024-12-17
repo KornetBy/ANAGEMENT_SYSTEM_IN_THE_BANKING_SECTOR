@@ -130,11 +130,11 @@
     <ClCompile Include="CompensationManager.cpp" />
     <ClCompile Include="DataManager.cpp" />
     <ClCompile Include="Logger.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="RequestHandler.cpp" />
     <ClCompile Include="RoleValidator.cpp" />
     <ClCompile Include="ScheduleManager.cpp" />
     <ClCompile Include="server.cpp" />
+    <ClCompile Include="server_main.cpp" />
     <ClCompile Include="UserManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +145,7 @@
     <ClInclude Include="RoleValidator.h" />
     <ClInclude Include="ScheduleManager.h" />
     <ClInclude Include="server.h" />
+    <ClInclude Include="user.h" />
     <ClInclude Include="UserManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

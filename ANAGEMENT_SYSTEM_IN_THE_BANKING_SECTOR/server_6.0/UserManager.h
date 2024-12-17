@@ -1,27 +1,21 @@
+// Server/UserManager.h
 #pragma once
-#ifndef USER_MANAGER_H
-#define USER_MANAGER_H
-
-#include <string>
-#include <unordered_map>
+#include "User.h"
 #include <vector>
-#include "DataManager.h"
+#include <string>
+#include <mutex>
 
 class UserManager {
 private:
-    std::unordered_map<std::string, std::string> userRoles; // Карта логинов и ролей
-    std::unordered_map<std::string, bool> userStatus;      // Карта логинов и статусов (активен/заблокирован)
-    DataManager dataManager;                               // Работа с текстовыми файлами
+    std::vector<User> users;
+    std::string userFileName;
+    std::mutex mtx;
 
-    void loadUsers(const std::string& filename);           // Загрузка пользователей из файла
-
+    void loadUsers();
 public:
-    UserManager(const std::string& userFile);
-
-    std::string getRole(const std::string& username);      // Получение роли пользователя
-    bool isUserActive(const std::string& username);        // Проверка, активен ли пользователь
-    bool blockUser(const std::string& username);           // Блокировка пользователя
-    bool addUser(const std::string& username, const std::string& role); // Добавление нового пользователя
+    UserManager(const std::string& fileName);
+    User getUser(const std::string& username);
+    bool addUser(const User& user);
+    bool deleteUser(const std::string& username);
+    bool updateUserStatus(const std::string& username, const std::string& status);
 };
-
-#endif // USER_MANAGER_H

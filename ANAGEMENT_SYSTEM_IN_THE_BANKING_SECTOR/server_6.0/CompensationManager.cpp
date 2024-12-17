@@ -1,37 +1,78 @@
+// Server/CompensationManager.cpp
 #include "CompensationManager.h"
+#include <fstream>
+#include <sstream>
+#include <algorithm>
 
-// Конструктор
-CompensationManager::CompensationManager() {}
-
-// Добавление заявки на компенсацию
-bool CompensationManager::addCompensationRequest(const std::string& employeeId, const std::string& requestDetails) {
-    std::string requestId = std::to_string(std::hash<std::string>{}(employeeId + requestDetails));
-    dataManager.writeFile("data/заявки_компенсаций.txt", requestId + "|" + employeeId + "|" + requestDetails + "|Ожидает");
-    return true;
+CompensationManager::CompensationManager(const std::string& fileName) : compensationFileName(fileName) {
+    loadRequests();
 }
 
-// Получение всех заявок
-std::vector<std::string> CompensationManager::getAllRequests() {
-    return dataManager.readFile("data/заявки_компенсаций.txt");
-}
-
-// Обработка заявки
-bool CompensationManager::processRequest(const std::string& requestId, const std::string& status) {
-    std::vector<std::string> requests = dataManager.readFile("data/заявки_компенсаций.txt");
-    bool updated = false;
-    for (auto& line : requests) {
-        if (line.find(requestId + "|") == 0) {
-            size_t lastDelimiter = line.rfind('|');
-            line = line.substr(0, lastDelimiter + 1) + status;
-            updated = true;
+void CompensationManager::loadRequests() {
+    std::lock_guard<std::mutex> lock(mtx);
+    requests.clear();
+    std::ifstream file(compensationFileName);
+    if (!file.is_open()) {
+        // Файл не существует, создадим пустой
+        std::ofstream outfile(compensationFileName);
+        outfile.close();
+        return;
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string requestId, employeeName, compensationData, status;
+        if (std::getline(iss, requestId, '|') &&
+            std::getline(iss, employeeName, '|') &&
+            std::getline(iss, compensationData, '|') &&
+            std::getline(iss, status, '|')) {
+            CompensationRequest req{ requestId, employeeName, compensationData, status };
+            requests.push_back(req);
         }
     }
-    if (updated) {
-        std::ofstream file("data/заявки_компенсаций.txt", std::ios::trunc);
-        for (const auto& request : requests) {
-            file << request << std::endl;
-        }
+    file.close();
+}
+
+bool CompensationManager::addRequest(const CompensationRequest& request) {
+    std::lock_guard<std::mutex> lock(mtx);
+    // Проверяем, существует ли уже заявка с таким ID
+    auto it = std::find_if(requests.begin(), requests.end(),
+        [&](const CompensationRequest& r) { return r.requestId == request.requestId; });
+    if (it != requests.end()) {
+        return false; // Заявка уже существует
+    }
+    requests.push_back(request);
+    // Сохраняем изменения в файл
+    std::ofstream file(compensationFileName, std::ios::app);
+    if (file.is_open()) {
+        file << request.requestId << "|" << request.employeeName << "|" << request.compensationData << "|" << request.status << std::endl;
         file.close();
+        return true;
     }
-    return updated;
+    return false;
+}
+
+bool CompensationManager::processRequest(const std::string& requestId) {
+    std::lock_guard<std::mutex> lock(mtx);
+    for (auto& req : requests) {
+        if (req.requestId == requestId) {
+            req.status = "processed";
+            // Перезаписываем файл
+            std::ofstream file(compensationFileName, std::ios::trunc);
+            if (file.is_open()) {
+                for (const auto& r : requests) {
+                    file << r.requestId << "|" << r.employeeName << "|" << r.compensationData << "|" << r.status << std::endl;
+                }
+                file.close();
+                return true;
+            }
+            return false;
+        }
+    }
+    return false; // Заявка не найдена
+}
+
+std::vector<CompensationRequest> CompensationManager::getAllRequests() {
+    std::lock_guard<std::mutex> lock(mtx);
+    return requests;
 }

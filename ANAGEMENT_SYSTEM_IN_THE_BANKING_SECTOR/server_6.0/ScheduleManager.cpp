@@ -1,38 +1,54 @@
+// Server/ScheduleManager.cpp
 #include "ScheduleManager.h"
+#include <fstream>
+#include <sstream>
 
-// Конструктор
-ScheduleManager::ScheduleManager() {}
-
-// Добавление графика
-bool ScheduleManager::addSchedule(const std::string& employeeId, const std::string& scheduleDetails) {
-    if (dataManager.isDuplicate("data/графики_работы.txt", employeeId)) {
-        return false;
-    }
-    dataManager.writeFile("data/графики_работы.txt", employeeId + "|" + scheduleDetails);
-    return true;
+ScheduleManager::ScheduleManager(const std::string& fileName) : scheduleFileName(fileName) {
+    loadSchedules();
 }
 
-// Изменение графика
-bool ScheduleManager::editSchedule(const std::string& employeeId, const std::string& newScheduleDetails) {
-    if (!dataManager.deleteRecord("data/графики_работы.txt", employeeId)) {
-        return false;
+void ScheduleManager::loadSchedules() {
+    std::lock_guard<std::mutex> lock(mtx);
+    schedules.clear();
+    std::ifstream file(scheduleFileName);
+    if (!file.is_open()) {
+        // Файл не существует, создадим пустой
+        std::ofstream outfile(scheduleFileName);
+        outfile.close();
+        return;
     }
-    dataManager.writeFile("data/графики_работы.txt", employeeId + "|" + newScheduleDetails);
-    return true;
-}
-
-// Получение графика сотрудника
-std::string ScheduleManager::getSchedule(const std::string& employeeId) {
-    std::vector<std::string> schedules = dataManager.readFile("data/графики_работы.txt");
-    for (const auto& line : schedules) {
-        if (line.find(employeeId + "|") == 0) {
-            return line.substr(employeeId.length() + 1); // Убираем ID и разделитель
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string employeeName, scheduleData;
+        if (std::getline(iss, employeeName, '|') &&
+            std::getline(iss, scheduleData, '|')) {
+            schedules[employeeName] = scheduleData;
         }
     }
-    return "";
+    file.close();
 }
 
-// Удаление графика
-bool ScheduleManager::deleteSchedule(const std::string& employeeId) {
-    return dataManager.deleteRecord("data/графики_работы.txt", employeeId);
+bool ScheduleManager::updateSchedule(const std::string& employeeName, const std::string& scheduleData) {
+    std::lock_guard<std::mutex> lock(mtx);
+    schedules[employeeName] = scheduleData;
+    // Перезаписываем файл
+    std::ofstream file(scheduleFileName, std::ios::trunc);
+    if (file.is_open()) {
+        for (const auto& pair : schedules) {
+            file << pair.first << "|" << pair.second << std::endl;
+        }
+        file.close();
+        return true;
+    }
+    return false;
+}
+
+std::string ScheduleManager::getSchedule(const std::string& employeeName) {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto it = schedules.find(employeeName);
+    if (it != schedules.end()) {
+        return it->second;
+    }
+    return "График не найден.";
 }

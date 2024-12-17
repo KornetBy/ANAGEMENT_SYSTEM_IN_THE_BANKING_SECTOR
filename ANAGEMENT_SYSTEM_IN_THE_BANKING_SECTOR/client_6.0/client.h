@@ -1,29 +1,21 @@
-﻿#ifndef CLIENT_H
-#define CLIENT_H
-
-#include <winsock2.h>
+﻿// Client.h
+#pragma once
 #include <string>
-#include <iostream>
-
-#pragma comment(lib, "ws2_32.lib")
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <mutex>
 
 class Client {
 private:
-    WSADATA wsaData;           // Инициализация Winsock
-    SOCKET clientSocket;       // Клиентский сокет
-    sockaddr_in serverAddr;    // Адрес сервера
-    std::string serverIP;      // IP-адрес сервера
-    int port;                  // Порт сервера
-
+    SOCKET sock;
+    sockaddr_in serverAddr;
+    bool connected;
+    std::mutex mtx;
 public:
-    Client(const std::string& ip, int port);
+    Client();
     ~Client();
-    bool validateInput(const std::string& input);
-
-    bool connectToServer();                // Подключение к серверу
-    void sendMessage(const std::string& message);  // Отправка сообщений серверу
-    std::string receiveMessage();          // Получение сообщений от сервера
-    void closeConnection();                // Закрытие соединения
+    bool connectToServer(const std::string& ip, int port);
+    bool sendMessage(const std::string& message);
+    std::string receiveMessage();
+    void disconnect();
 };
-
-#endif // CLIENT_H

@@ -1,26 +1,20 @@
+// Menu.h
 #pragma once
-#ifndef MENU_H
-#define MENU_H
-
 #include <string>
-#include <iostream>
 #include "Client.h"
 
 class Menu {
 private:
-    Client& client;                 // Ссылка на клиент для отправки запросов
-    std::string role;               // Роль пользователя
-
-    void adminMenu();               // Меню администратора
-    void hrMenu();                  // Меню менеджера HR
-    void cashierMenu();             // Меню кассира/оператора
-    void employeeMenu();            // Меню обычного сотрудника
-    void managerMenu();             // Меню руководителя подразделения
-    void displayHeader();           // Заголовок меню
-
+    Client& client;
+    std::string role;
+    std::string username;
 public:
-    Menu(Client& client, const std::string& role);
-    void showMenu();                // Запуск меню
+    Menu(Client& cli);
+    void showMenu();
+    bool authenticate();
+    void handleAdminMenu();
+    void handleHRMenu();
+    void handleCashierMenu();
+    void handleManagerMenu();
+    void handleEmployeeMenu();
 };
-
-#endif // MENU_H

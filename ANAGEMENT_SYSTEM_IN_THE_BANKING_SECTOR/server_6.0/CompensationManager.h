@@ -1,26 +1,26 @@
+// Server/CompensationManager.h
 #pragma once
-#ifndef COMPENSATION_MANAGER_H
-#define COMPENSATION_MANAGER_H
-
 #include <string>
 #include <vector>
-#include "DataManager.h"
+#include <mutex>
+
+struct CompensationRequest {
+    std::string requestId;
+    std::string employeeName;
+    std::string compensationData;
+    std::string status;
+};
 
 class CompensationManager {
 private:
-    DataManager dataManager;
+    std::vector<CompensationRequest> requests;
+    std::string compensationFileName;
+    std::mutex mtx;
 
+    void loadRequests();
 public:
-    CompensationManager();
-
-    // Добавление заявки на компенсацию
-    bool addCompensationRequest(const std::string& employeeId, const std::string& requestDetails);
-
-    // Получение всех заявок
-    std::vector<std::string> getAllRequests();
-
-    // Обработка заявки
-    bool processRequest(const std::string& requestId, const std::string& status);
+    CompensationManager(const std::string& fileName);
+    bool addRequest(const CompensationRequest& request);
+    bool processRequest(const std::string& requestId);
+    std::vector<CompensationRequest> getAllRequests();
 };
-
-#endif // COMPENSATION_MANAGER_H

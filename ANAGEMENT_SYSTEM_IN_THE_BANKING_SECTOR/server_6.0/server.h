@@ -1,30 +1,31 @@
+// Server/Server.h
 #pragma once
-#ifndef SERVER_H
-#define SERVER_H
-
 #include <winsock2.h>
-#include <string>
-#include <iostream>
+#include <ws2tcpip.h>
+#include <thread>
+#include <vector>
+#include <mutex>
+#include <atomic>
+#include <unordered_set>
+#include "RequestHandler.h"
 
-// Необходимо подключить библиотеку Winsock
-#pragma comment(lib, "ws2_32.lib")
+// Не забудьте добавить ws2_32.lib в настройки линковки
+#pragma comment(lib, "Ws2_32.lib")
 
 class Server {
 private:
-    WSADATA wsaData;
-    SOCKET serverSocket;
-    sockaddr_in serverAddr;
+    SOCKET listenSocket;
     int port;
-    bool running;
+    std::atomic<bool> running;
+    std::vector<std::thread> clientThreads;
+    std::mutex clientsMtx;
+    std::unordered_set<std::string> activeUsers; // Для отслеживания активных пользователей
 
-    void handleClient(SOCKET clientSocket); // Обработка клиента
-
+    void handleClient(SOCKET clientSocket);
 public:
-    Server(int port);
+    Server(int portNumber);
     ~Server();
-
-    void start(); // Запуск сервера
-    void stop();  // Остановка сервера
+    bool start();
+    void stop();
+    std::vector<std::string> getActiveUsers();
 };
-
-#endif // SERVER_H

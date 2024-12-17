@@ -1,60 +1,54 @@
+// Client/main.cpp
 #include "Client.h"
-#include "Auth.h"
 #include "Menu.h"
-#include <windows.h>
+#include <iostream>
+#include <string>
 
 int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
-    const std::string serverIP = "127.0.0.1"; // IP-адрес сервера
-    const int port = 5000;                    // Порт сервера
+    Client client;
+    std::string serverIP = "127.0.0.1"; // IP сервера
+    int serverPort = 5000; // Порт сервера
 
-    Client client(serverIP, port);
+    // Подключение к серверу
+    if (!client.connectToServer(serverIP, serverPort)) {
+        std::cerr << "Не удалось подключиться к серверу. Завершение программы." << std::endl;
+        return 1;
+    }
+    std::cout << "Успешно подключено к серверу.\n";
 
-    if (client.connectToServer()) { // Устанавливаем соединение
-        std::cout << "Подключение успешно!" << std::endl;
+    // Получение приветственного сообщения от сервера
+    std::string welcome = client.receiveMessage();
+    std::cout << "Сервер: " << welcome << std::endl;
 
-        // Авторизация
-        Auth auth;
-        std::string login, password;
+    // Аутентификация
+    std::string username, password;
+    std::cout << "Введите логин: ";
+    std::getline(std::cin, username);
+    std::cout << "Введите пароль: ";
+    std::getline(std::cin, password);
 
-        // Ввод логина с валидацией
-        do {
-            std::cout << "Введите логин: ";
-            std::getline(std::cin, login);
-        } while (!client.validateInput(login));
+    // Формируем команду AUTH|username|password
+    std::string authCommand = "AUTH|" + username + "|" + password;
+    client.sendMessage(authCommand);
 
-        // Ввод пароля с валидацией
-        do {
-            std::cout << "Введите пароль: ";
-            std::getline(std::cin, password);
-        } while (!client.validateInput(password));
+    // Получение ответа
+    std::string authResponse = client.receiveMessage();
+    if (authResponse.find("SUCCESS") == 0) {
+        size_t pos = authResponse.find('|');
+        std::string role = authResponse.substr(pos + 1);
+        std::cout << "Успешная авторизация. Роль: " << role << std::endl;
 
-        // Установка данных для авторизации
-        auth.setCredentials(login, password);
-        std::string authRequest = auth.getAuthRequest();
-
-        // Отправка запроса авторизации
-        client.sendMessage(authRequest);
-        std::string serverResponse = client.receiveMessage();
-
-        if (serverResponse.find("SUCCESS") != std::string::npos) {
-            std::cout << "Авторизация успешна!" << std::endl;
-
-            // Извлекаем роль пользователя
-            std::string role = serverResponse.substr(serverResponse.find('|') + 1);
-
-            // Отображение меню в зависимости от роли
-            Menu menu(client, role);
-            menu.showMenu();
-        }
-        else {
-            std::cerr << "Ошибка авторизации: " << serverResponse << std::endl;
-        }
+        // Создание и запуск меню
+        Menu menu(client, role);
+        menu.showMenu();
     }
     else {
-        std::cerr << "Не удалось подключиться к серверу." << std::endl;
+        std::cerr << "Ошибка аутентификации: " << authResponse << std::endl;
     }
 
+    // Отключение от сервера
+    client.disconnect();
     return 0;
 }

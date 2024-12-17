@@ -1,29 +1,18 @@
+// Server/ScheduleManager.h
 #pragma once
-#ifndef SCHEDULE_MANAGER_H
-#define SCHEDULE_MANAGER_H
-
 #include <string>
-#include <vector>
-#include "DataManager.h"
+#include <unordered_map>
+#include <mutex>
 
 class ScheduleManager {
 private:
-    DataManager dataManager;
+    std::unordered_map<std::string, std::string> schedules;
+    std::string scheduleFileName;
+    std::mutex mtx;
 
+    void loadSchedules();
 public:
-    ScheduleManager();
-
-    // Добавление графика
-    bool addSchedule(const std::string& employeeId, const std::string& scheduleDetails);
-
-    // Изменение графика
-    bool editSchedule(const std::string& employeeId, const std::string& newScheduleDetails);
-
-    // Получение графика сотрудника
-    std::string getSchedule(const std::string& employeeId);
-
-    // Удаление графика
-    bool deleteSchedule(const std::string& employeeId);
+    ScheduleManager(const std::string& fileName);
+    bool updateSchedule(const std::string& employeeName, const std::string& scheduleData);
+    std::string getSchedule(const std::string& employeeName);
 };
-
-#endif // SCHEDULE_MANAGER_H
