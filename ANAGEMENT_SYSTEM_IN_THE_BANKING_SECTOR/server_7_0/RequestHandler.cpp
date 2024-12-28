@@ -970,6 +970,241 @@ std::string RequestHandler::processRequest(const std::string& request, const std
         }
         return "SUCCESS|" + response;
     }
+    if (command == "VIEW_ALL_COURSES") {
+        // Получаем список всех курсов
+        std::vector<Course> courses = courseManager.getAllCourses();
+        std::string response = "";
+        for (const auto& course : courses) {
+            response += course.courseID + "|" + course.topic + "|" + course.startDate + "|" + course.endDate + "\n";
+        }
+        if (response.empty()) {
+            return "SUCCESS|Нет курсов для отображения.";
+        }
+        return "SUCCESS|" + response;
+    }
+    if (command == "VIEW_ALL_SALARIES") {
+        // Получаем список всех зарплат
+        std::vector<Salary> salaries = salaryManager.getAllSalaries();
+        std::string response = "";
+        for (const auto& sal : salaries) {
+            response += std::to_string(sal.salaryID) + "|" + std::to_string(sal.employeeID) + "|"
+                + std::to_string(sal.positionID) + "|" + std::to_string(sal.baseSalary) + "|"
+                + std::to_string(sal.bonuses) + "|" + std::to_string(sal.deductions) + "|"
+                + std::to_string(sal.netPay) + "|" + sal.calculationDate + "\n";
+        }
+        if (response.empty()) {
+            return "SUCCESS|Нет зарплат для отображения.";
+        }
+        return "SUCCESS|" + response;
+    }
+    if (command == "VIEW_MY_RESPONSIBILITIES") {
+        // Получаем ID сотрудника
+        std::string token;
+        getline(iss, token, '|');
+        long employeeID = std::stol(token);
+
+        std::vector<JobResponsibility> responsibilities = jobResponsibilityManager.getAllResponsibilities();
+        std::string response = "";
+        for (const auto& resp : responsibilities) {
+            if (resp.employeeID == employeeID) {
+                response += std::to_string(resp.responsibilityID) + "|"
+                    + std::to_string(resp.positionID) + "|"
+                    + resp.responsibilityDescription + "\n";
+            }
+        }
+
+        if (response.empty()) {
+            return "SUCCESS|У вас нет назначенных обязанностей.";
+        }
+
+        return "SUCCESS|" + response;
+    }
+    if (command == "VIEW_MY_COURSES") {
+        // Получаем ID сотрудника
+        std::string token;
+        getline(iss, token, '|');
+        long employeeID = std::stol(token);
+
+        // Получаем курсы, на которые записан сотрудник
+        std::vector<Course> myCourses = courseManager.getCoursesByEmployee(employeeID);
+        std::string response = "";
+        for (const auto& course : myCourses) {
+            response += course.courseID + "|" + course.topic + "|" + course.startDate + "|" + course.endDate + "\n";
+        }
+
+        if (response.empty()) {
+            return "SUCCESS|Вы не записаны на курсы.";
+        }
+
+        return "SUCCESS|" + response;
+    }
+    if (command == "PROCESS_COMPENSATION") {
+        // Формат: PROCESS_COMPENSATION|requestID|newStatus
+        std::string token, newStatus;
+        getline(iss, token, '|');
+        long requestID = std::stol(token);
+        getline(iss, newStatus, '|');
+
+        bool success = compensationManager.processRequest(requestID, newStatus);
+        if (success) {
+            historyManager.addHistory(username, "PROCESS_COMPENSATION", "Обработана заявка ID " + std::to_string(requestID) + " статус: " + newStatus);
+            logger.log("INFO", "PROCESS_COMPENSATION", "Обработана заявка ID " + std::to_string(requestID) + " статус: " + newStatus);
+            return "SUCCESS|Заявка обработана и статус изменен на: " + newStatus;
+        }
+        else {
+            return "ERROR|Не удалось обработать заявку. Возможно, ID не существует.";
+        }
+    }
+    if (command == "VIEW_ACTIVE_COURSES") {
+        // Формат: VIEW_ACTIVE_COURSES
+        std::vector<Course> activeCourses = courseManager.getActiveCourses();
+        std::string response = "";
+        for (const auto& course : activeCourses) {
+            response += course.courseID + "|" + course.topic + "|" + course.startDate + "|" + course.endDate + "\n";
+        }
+        if (response.empty()) {
+            return "SUCCESS|Нет активных курсов для отображения.";
+        }
+        return "SUCCESS|" + response;
+    }
+    if (command == "ADD_SALARY") {
+        // Формат: ADD_SALARY|salaryID|employeeID|positionID|baseSalary|bonuses|deductions|netPay|calculationDate
+        std::string token;
+        Salary sal;
+        getline(iss, token, '|');
+        sal.salaryID = std::stol(token);
+        getline(iss, token, '|');
+        sal.employeeID = std::stol(token);
+        getline(iss, token, '|');
+        sal.positionID = std::stol(token);
+        getline(iss, token, '|');
+        sal.baseSalary = std::stod(token);
+        getline(iss, token, '|');
+        sal.bonuses = std::stod(token);
+        getline(iss, token, '|');
+        sal.deductions = std::stod(token);
+        getline(iss, token, '|');
+        sal.netPay = std::stod(token);
+        getline(iss, sal.calculationDate, '|');
+
+        bool success = salaryManager.addSalary(sal);
+        if (success) {
+            historyManager.addHistory(username, "ADD_SALARY", "Добавлена зарплата ID " + std::to_string(sal.salaryID));
+            logger.log("INFO", "ADD_SALARY", "Добавлена зарплата ID " + std::to_string(sal.salaryID));
+            return "SUCCESS|Зарплата добавлена";
+        }
+        else {
+            return "ERROR|Не удалось добавить зарплату. Возможно, ID уже существует.";
+        }
+    }
+    /*if (command == "ADD_WORK_SCHEDULE") {
+        std::string token;
+        getline(iss, token, '|');
+        long empID = std::stol(token);
+        getline(iss, token, '|');
+        int dayOfWeek = std::stoi(token);
+        getline(iss, token, '|');
+        std::string startTime = token;
+        getline(iss, token, '|');
+        std::string endTime = token;
+
+        // Добавление нового графика сотрудника
+        bool success = scheduleManager.addSchedule(empID, dayOfWeek, startTime, endTime);
+        if (success) {
+            return "SUCCESS|График работы добавлен.";
+        }
+        else {
+            return "ERROR|Не удалось добавить график.";
+        }
+    }*/
+
+    /*if (command == "UPDATE_WORK_SCHEDULE") {
+        std::string token;
+        getline(iss, token, '|');
+        long empID = std::stol(token);
+        getline(iss, token, '|');
+        int dayOfWeek = std::stoi(token);
+        getline(iss, token, '|');
+        std::string startTime = token;
+        getline(iss, token, '|');
+        std::string endTime = token;
+
+        // Обновление графика сотрудника
+        bool success = scheduleManager.updateSchedule(empID, dayOfWeek, startTime, endTime);
+        if (success) {
+            return "SUCCESS|График работы обновлен.";
+        }
+        else {
+            return "ERROR|Не удалось обновить график.";
+        }
+    }*/
+
+    if (command == "DELETE_WORK_SCHEDULE") {
+        std::string token;
+        getline(iss, token, '|');
+        long empID = std::stol(token);
+
+        // Удаление графика сотрудника
+        bool success = scheduleManager.deleteSchedule(empID);
+        if (success) {
+            return "SUCCESS|График работы удален.";
+        }
+        else {
+            return "ERROR|Не удалось удалить график.";
+        }
+    }
+
+    /*if (command == "VIEW_WORK_SCHEDULE") {
+        std::string token;
+        getline(iss, token, '|');
+        long empID = std::stol(token);
+
+        // Получение графика сотрудника
+        std::vector<WorkSchedule> schedules = scheduleManager.getSchedule(empID);
+        std::string response = "";
+        for (const auto& schedule : schedules) {
+            response += "День недели: " + std::to_string(schedule.dayOfWeek) + " | Время: " + schedule.startTime + " - " + schedule.endTime + "\n";
+        }
+
+        if (response.empty()) {
+            return "SUCCESS|График работы не найден.";
+        }
+
+        return "SUCCESS|" + response;
+    }*/
+
+    /*if (command == "UPDATE_EMPLOYEE") {
+        // Формат: UPDATE_EMPLOYEE|empID|fullName|address|contactInfo|status
+        std::string token;
+        long empID;
+        std::string fullName, address, contactInfo, status;
+
+        // Получаем empID
+        getline(iss, token, '|');
+        empID = std::stol(token);
+
+        // Получаем fullName
+        getline(iss, fullName, '|');
+
+        // Получаем address
+        getline(iss, address, '|');
+
+        // Получаем contactInfo
+        getline(iss, contactInfo, '|');
+
+        // Получаем status
+        getline(iss, status, '|');
+
+        bool success = userManager.updateEmployeeData(empID, fullName, address, contactInfo, status);
+        if (success) {
+            historyManager.addHistory(username, "UPDATE_EMPLOYEE", "Изменены данные сотрудника ID " + std::to_string(empID));
+            logger.log("INFO", "UPDATE_EMPLOYEE", "Изменены данные сотрудника ID " + std::to_string(empID));
+            return "SUCCESS|Данные сотрудника обновлены.";
+        }
+        else {
+            return "ERROR|Не удалось обновить данные сотрудника. Возможно, ID не существует.";
+        }
+    }*/
 
 
     return "ERROR|Неизвестная команда.";

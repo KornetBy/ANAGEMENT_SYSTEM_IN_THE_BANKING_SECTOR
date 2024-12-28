@@ -1,4 +1,3 @@
-// RequestHandler.h
 #pragma once
 #include <string>
 #include "Logger.h"
@@ -14,6 +13,7 @@
 #include "JobResponsibilityManager.h"
 #include "DepartmentManager.h"
 #include "PerformanceEvaluationManager.h"
+#include "ConnectionManager.h"
 
 class RequestHandler {
 private:
@@ -23,8 +23,6 @@ private:
     PositionManager positionManager;
     CourseManager courseManager;
     CompensationManager compensationManager;
-
-    
     SalaryManager salaryManager;
     ScheduleManager scheduleManager;
     JobResponsibilityManager jobResponsibilityManager;
@@ -32,11 +30,7 @@ private:
     PerformanceEvaluationManager performanceEvaluationManager;
     HistoryManager historyManager;
     RoleValidator roleValidator;
-    
-    
-    
-    
-    
+    ConnectionManager connectionManager;
 public:
     RequestHandler(const std::string& logFilename,
         const std::string& userFilename,
@@ -50,8 +44,8 @@ public:
         const std::string& departmentFilename,
         const std::string& evaluationFilename,
         const std::string& historyFilename);
-    // RequestHandler.h
+
     std::string processRequest(const std::string& request, const std::string& username, const std::string& role);
-    void processClient(SOCKET clientSocket, const std::string& username, const std::string& role);
-    UserManager& getUserManager() { return userManager; }
+    UserManager& getUserManager();
+    ConnectionManager& getConnectionManager() { return connectionManager; }
 };

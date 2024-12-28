@@ -1,4 +1,0 @@
-﻿x64\Release\client.obj : warning LNK4042: объект указан более одного раза; лишние не учитываются
-main.obj : error LNK2001: неразрешенный внешний символ "public: __cdecl Menu::Menu(class Client &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (??0Menu@@QEAA@AEAVClient@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z).
-main.obj : error LNK2001: неразрешенный внешний символ "public: void __cdecl Client::sendMessage(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?sendMessage@Client@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z).
-E:\projects\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\ANAGEMENT_SYSTEM_IN_THE_BANKING_SECTOR\x64\Release\client_6.0.exe : fatal error LNK1120: неразрешенных внешних элементов: 2

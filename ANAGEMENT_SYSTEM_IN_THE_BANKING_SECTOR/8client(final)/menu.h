@@ -1,7 +1,8 @@
+// Menu.h
 #pragma once
+#include <string>
 #include "Client.h"
 #include "ScheduleManager.h"
-#include <string>
 
 class Menu {
 private:
@@ -9,14 +10,15 @@ private:
     std::string role;
     std::string username;
     ScheduleManager scheduleManager;
-
-public:
-    Menu(Client& cli);
     bool authenticate();
-    void showMenu();
     void handleAdminMenu();
     void handleHRMenu();
     void handleCashierMenu();
     void handleManagerMenu();
     void handleEmployeeMenu();
+    void addEmployeeCommon();
+    void updateEmployeeCommon(const std::string& cmd);
+public:
+    Menu(Client& cli);
+    void showMenu();
 };

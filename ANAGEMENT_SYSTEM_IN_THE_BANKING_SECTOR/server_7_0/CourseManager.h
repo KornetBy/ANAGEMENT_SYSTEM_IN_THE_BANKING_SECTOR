@@ -6,6 +6,7 @@
 
 struct Course {
     std::string courseID;
+    std::string status;
     std::string topic;
     std::string startDate; // Формат YYYY-MM-DD
     std::string endDate;   // Формат YYYY-MM-DD
@@ -25,6 +26,8 @@ public:
     bool updateCourse(const Course& course);
     bool deleteCourse(const std::string& courseID);
     std::vector<Course> getAllCourses();
+    std::vector<Course> getActiveCourses();
+    
 
     // Добавленный метод для получения курсов по employeeID
     std::vector<Course> getCoursesByEmployee(long employeeID);

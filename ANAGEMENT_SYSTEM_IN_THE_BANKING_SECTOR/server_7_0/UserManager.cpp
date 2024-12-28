@@ -2,87 +2,96 @@
 #include "UserManager.h"
 #include <fstream>
 #include <sstream>
-#include <iostream>
+#include <algorithm>
+#include <stdexcept>
 
+// Конструктор: Загружает пользователей из файла при инициализации
 UserManager::UserManager(const std::string& filename) : userFileName(filename) {
     std::lock_guard<std::mutex> lock(mtx);
-    std::ifstream ifs(userFileName);
-    if (!ifs.is_open()) {
-        std::cerr << "Не удалось открыть файл: " << userFileName << "\n";
+    std::ifstream infile(userFileName);
+    if (!infile.is_open()) {
+        // Если файл не существует, создаем его
+        std::ofstream outfile(userFileName, std::ios::app);
+        outfile.close();
         return;
     }
 
     std::string line;
-    while (getline(ifs, line)) {
-        if (line.empty()) continue; // Пропускаем пустые строки
-
+    while (getline(infile, line)) {
+        if (line.empty()) continue;
         std::istringstream iss(line);
-        std::string username, password, role, status;
+        std::string token;
+        User user;
 
-        // Считываем токены
-        if (!getline(iss, username, '|') ||
-            !getline(iss, password, '|') ||
-            !getline(iss, role, '|') ||
-            !getline(iss, status, '|')) {
-            std::cerr << "Некорректный формат строки: " << line << "\n";
-            continue; // Пропускаем некорректную строку
-        }
+        getline(iss, user.username, '|');
+        getline(iss, user.password, '|');
+        getline(iss, user.role, '|');
+        getline(iss, user.status, '|');
 
-        // Добавляем пользователя только при корректном формате
-        User user{ username, password, role, status };
         users.push_back(user);
     }
-    ifs.close();
+    infile.close();
 }
 
-
+// Получить пользователя по имени
 User UserManager::getUser(const std::string& username) {
     std::lock_guard<std::mutex> lock(mtx);
     for (const auto& user : users) {
-        if (user.username == username) return user;
+        if (user.username == username) {
+            return user;
+        }
     }
-    return User{ "", "", "", "" };
+    throw std::runtime_error("Пользователь не найден");
 }
 
+// Добавить нового пользователя
 bool UserManager::addUser(const User& user) {
     std::lock_guard<std::mutex> lock(mtx);
-    for (const auto& u : users) {
-        if (u.username == user.username) return false; // Пользователь уже существует
+    // Проверка на существование пользователя
+    auto it = std::find_if(users.begin(), users.end(),
+        [&](const User& u) { return u.username == user.username; });
+    if (it != users.end()) {
+        return false; // Пользователь уже существует
     }
+
     users.push_back(user);
 
-    std::ofstream ofs(userFileName, std::ios::app);
-    if (!ofs.is_open()) return false;
-    ofs << user.username << "|" << user.password << "|" << user.role << "|" << user.status << "\n";
-    ofs.close();
+    // Запись в файл
+    std::ofstream outfile(userFileName, std::ios::app);
+    if (!outfile.is_open()) {
+        users.pop_back(); // Откат изменений
+        return false;
+    }
+    outfile << user.username << "|" << user.password << "|"
+        << user.role << "|" << user.status << "|\n";
+    outfile.close();
     return true;
 }
 
+// Удалить пользователя по имени
 bool UserManager::deleteUser(const std::string& username) {
     std::lock_guard<std::mutex> lock(mtx);
-    bool found = false;
-    std::vector<User> updatedUsers;
-    for (const auto& user : users) {
-        if (user.username != username) {
-            updatedUsers.push_back(user);
-        }
-        else {
-            found = true;
-        }
+    auto it = std::remove_if(users.begin(), users.end(),
+        [&](const User& u) { return u.username == username; });
+    if (it == users.end()) {
+        return false; // Пользователь не найден
     }
-    if (!found) return false;
-    users = updatedUsers;
+    users.erase(it, users.end());
 
-    // Перезапись файла
-    std::ofstream ofs(userFileName, std::ios::trunc);
-    if (!ofs.is_open()) return false;
-    for (const auto& user : users) {
-        ofs << user.username << "|" << user.password << "|" << user.role << "|" << user.status << "\n";
+    // Перезапись файла без удаленного пользователя
+    std::ofstream outfile(userFileName, std::ios::trunc);
+    if (!outfile.is_open()) {
+        return false;
     }
-    ofs.close();
+    for (const auto& user : users) {
+        outfile << user.username << "|" << user.password << "|"
+            << user.role << "|" << user.status << "|\n";
+    }
+    outfile.close();
     return true;
 }
 
+// Обновить статус пользователя
 bool UserManager::updateUserStatus(const std::string& username, const std::string& status) {
     std::lock_guard<std::mutex> lock(mtx);
     bool found = false;
@@ -93,14 +102,19 @@ bool UserManager::updateUserStatus(const std::string& username, const std::strin
             break;
         }
     }
-    if (!found) return false;
-
-    // Перезапись файла
-    std::ofstream ofs(userFileName, std::ios::trunc);
-    if (!ofs.is_open()) return false;
-    for (const auto& user : users) {
-        ofs << user.username << "|" << user.password << "|" << user.role << "|" << user.status << "\n";
+    if (!found) {
+        return false; // Пользователь не найден
     }
-    ofs.close();
+
+    // Перезапись файла с обновленным статусом
+    std::ofstream outfile(userFileName, std::ios::trunc);
+    if (!outfile.is_open()) {
+        return false;
+    }
+    for (const auto& user : users) {
+        outfile << user.username << "|" << user.password << "|"
+            << user.role << "|" << user.status << "|\n";
+    }
+    outfile.close();
     return true;
 }

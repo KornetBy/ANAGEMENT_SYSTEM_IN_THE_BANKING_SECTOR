@@ -10,7 +10,7 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#define DEFAULT_PORT "27015"
+#define DEFAULT_PORT "27020"
 #define BUFFER_SIZE 4096
 
 void handleClient(SOCKET clientSocket, RequestHandler* handler, std::string clientAddress) {

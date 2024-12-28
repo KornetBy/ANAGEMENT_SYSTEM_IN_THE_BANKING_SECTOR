@@ -1,5 +1,0 @@
-admin|adminpass|admin|active|1
-hruser|hrpass|hr|active|2
-cashier1|cashierpass|cashier|active|3
-manager1|managerpass|manager|active|4
-employee1|employeepass|employee|active|5

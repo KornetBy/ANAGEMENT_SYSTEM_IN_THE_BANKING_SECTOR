@@ -15,12 +15,15 @@ CourseManager::CourseManager(const std::string& filename) : courseFileName(filen
         std::istringstream iss(line);
         std::string token;
         Course course;
+
+        // Чтение данных из строки
         getline(iss, course.courseID, '|');
         getline(iss, course.topic, '|');
         getline(iss, course.startDate, '|');
         getline(iss, course.endDate, '|');
+        getline(iss, course.status, '|'); // Чтение статуса курса
 
-        // Парсим список участников, если он есть
+        // Парсим список участников
         if (getline(iss, token, '|')) {
             std::istringstream empStream(token);
             std::string empIDStr;
@@ -35,6 +38,7 @@ CourseManager::CourseManager(const std::string& filename) : courseFileName(filen
     }
     ifs.close();
 }
+
 
 // Метод получения курса по courseID
 Course CourseManager::getCourse(const std::string& courseID) {
@@ -176,3 +180,29 @@ bool CourseManager::enrollEmployeeToCourse(const std::string& courseID, long emp
     }
     return false; // Курс не найден или сотрудник уже записан
 }
+std::vector<Course> CourseManager::getActiveCourses() {
+    std::vector<Course> activeCourses;
+    std::ifstream infile("data/courses.txt");
+    if (!infile.is_open()) return activeCourses;
+
+    std::string line;
+    while (getline(infile, line)) {
+        std::istringstream iss(line);
+        Course course;
+        std::string token;
+
+        // Предполагаемый формат: courseID|topic|startDate|endDate|status
+        getline(iss, course.courseID, '|');
+        getline(iss, course.topic, '|');
+        getline(iss, course.startDate, '|');
+        getline(iss, course.endDate, '|');
+        getline(iss, course.status, '|');
+
+        if (course.status == "active") {
+            activeCourses.push_back(course);
+        }
+    }
+    infile.close();
+    return activeCourses;
+}
+
